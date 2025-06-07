@@ -3,6 +3,15 @@ const { expect } = require("chai");
 const NAME = "TokenMaster";
 const SYMBOL = "TM";
 
+const OCCASION = {
+  name: "ETH Texas",
+  date: "Apr 27",
+  time: "10:00AM CTS",
+  location: "Austin, Texas",
+  cost: ethers.utils.parseUnits("1", "ether"),
+  maxTickets: 100,
+};
+
 describe("TokenMaster", () => {
   let tokenMaster;
   let deployer, buyer;
@@ -12,6 +21,21 @@ describe("TokenMaster", () => {
 
     const TokenMaster = await ethers.getContractFactory("TokenMaster");
     tokenMaster = await TokenMaster.deploy(NAME, SYMBOL);
+
+    const transaction = await tokenMaster
+      .connect(deployer)
+      .list(
+        ...[
+          OCCASION.name,
+          OCCASION.date,
+          OCCASION.time,
+          OCCASION.location,
+          OCCASION.cost,
+          OCCASION.maxTickets,
+        ]
+      );
+
+    await transaction.wait();
   });
 
   describe("Deployment", () => {
@@ -31,6 +55,13 @@ describe("TokenMaster", () => {
       const owner = await tokenMaster.owner();
 
       expect(owner).to.equal(deployer.address);
+    });
+  });
+
+  describe("Occasions", () => {
+    it("Updates occasions count", async () => {
+      const totalOccasions = await tokenMaster.totalOccasions();
+      expect(totalOccasions).to.be.equal(1);
     });
   });
 });
