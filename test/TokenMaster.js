@@ -104,5 +104,16 @@ describe("TokenMaster", () => {
       const takenSeat = await tokenMaster.seatTaken(OCCASION_ID, SEAT);
       expect(takenSeat).to.be.equal(buyer.address);
     });
+
+    it("Updates ovarall seating status", async () => {
+      const seats = await tokenMaster.getTakenSeats(OCCASION_ID);
+      expect(seats.length).to.be.equal(1);
+      expect(seats[0]).to.be.equal(SEAT);
+    });
+
+    it("Updates the contract balance", async () => {
+      const balance = await ethers.provider.getBalance(tokenMaster.address);
+      expect(balance).to.be.equal(AMOUNT);
+    });
   });
 });
