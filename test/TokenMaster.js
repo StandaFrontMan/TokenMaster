@@ -76,4 +76,33 @@ describe("TokenMaster", () => {
       expect(occasion.location).to.be.equal(OCCASION.location);
     });
   });
+
+  describe("Minting", () => {
+    const OCCASION_ID = 1;
+    const SEAT = 50;
+    const AMOUNT = ethers.utils.parseUnits("1", "ether");
+
+    beforeEach(async () => {
+      const transaction = await tokenMaster
+        .connect(buyer)
+        .mint(OCCASION_ID, SEAT, { value: AMOUNT });
+
+      await transaction.wait();
+    });
+
+    it("Updates ticket count", async () => {
+      const occasion = await tokenMaster.getOccasion(1);
+      expect(occasion.tickets).to.be.equal(OCCASION.maxTickets - 1);
+    });
+
+    it("Updates buying status", async () => {
+      const status = await tokenMaster.hasBought(OCCASION_ID, buyer.address);
+      expect(status).to.be.equal(true);
+    });
+
+    it("Updates taken seat", async () => {
+      const takenSeat = await tokenMaster.seatTaken(OCCASION_ID, SEAT);
+      expect(takenSeat).to.be.equal(buyer.address);
+    });
+  });
 });
