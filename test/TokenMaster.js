@@ -63,5 +63,17 @@ describe("TokenMaster", () => {
       const totalOccasions = await tokenMaster.totalOccasions();
       expect(totalOccasions).to.be.equal(1);
     });
+
+    it("Returns occasions attributes", async () => {
+      const occasion = await tokenMaster.getOccasion(1);
+
+      expect(occasion.id).to.be.equal(1);
+      expect(occasion.cost).to.be.equal(OCCASION.cost);
+      expect(occasion.tickets).to.be.equal(OCCASION.maxTickets);
+      expect(occasion.name).to.be.equal(OCCASION.name);
+      expect(occasion.date).to.be.equal(OCCASION.date);
+      expect(occasion.time).to.be.equal(OCCASION.time);
+      expect(occasion.location).to.be.equal(OCCASION.location);
+    });
   });
 });
