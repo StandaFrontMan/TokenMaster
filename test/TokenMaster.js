@@ -115,5 +115,37 @@ describe("TokenMaster", () => {
       const balance = await ethers.provider.getBalance(tokenMaster.address);
       expect(balance).to.be.equal(AMOUNT);
     });
+
+    it("Should revert when minting with invalid _id = 0", async () => {
+      await expect(
+        tokenMaster.connect(buyer).mint(0, SEAT, { value: AMOUNT })
+      ).to.be.revertedWithCustomError(tokenMaster, "MintingWithZeroOccasionId");
+    });
+
+    it("Should revert when _id is greater than totalOccasions", async () => {
+      const NON_EXISTING_OCCASION_ID = 999;
+
+      await expect(
+        tokenMaster
+          .connect(buyer)
+          .mint(NON_EXISTING_OCCASION_ID, SEAT, { value: AMOUNT })
+      ).to.be.revertedWithCustomError(tokenMaster, "OccasionDoesNotExist");
+    });
+
+    it("Should revert if the seat already taken", async () => {
+      await expect(
+        tokenMaster.connect(buyer).mint(OCCASION_ID, SEAT, { value: AMOUNT })
+      ).to.be.revertedWithCustomError(tokenMaster, "SeatUnavailable");
+    });
+
+    it("Should revert if the seat out of range of maximum seats range", async () => {
+      const SEAT_OUT_OF_RANGE = 999;
+
+      await expect(
+        tokenMaster
+          .connect(buyer)
+          .mint(OCCASION_ID, SEAT_OUT_OF_RANGE, { value: AMOUNT })
+      ).to.be.revertedWithCustomError(tokenMaster, "SeatOutOfRange");
+    });
   });
 });

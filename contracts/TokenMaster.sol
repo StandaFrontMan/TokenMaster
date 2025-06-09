@@ -34,6 +34,26 @@ contract TokenMaster is ERC721 {
   /// @dev hasBought[occasionId][address] => true if the address has purchased a ticket for the occasion.
   mapping(uint256 => mapping(address => bool)) public hasBought;
 
+  /// @notice Can't mint occasion with id: 'id'
+  /// @param message error message.
+  /// @param id occasion id.
+  error MintingWithZeroOccasionId(string message, uint256 id);
+
+  /// @notice There is no occasion with id: 'id'
+  /// @param message error message.
+  /// @param id occasion id.
+  error OccasionDoesNotExist(string message, uint256 id);
+
+  /// @notice Unavailable seat by id: 'id'
+  /// @param message error message.
+  /// @param seat occasion id.
+  error SeatUnavailable(string message, uint256 seat);
+
+  /// @notice The selected seat number is out of the valid range of available seats.
+  /// @param seat The seat number that was selected.
+  /// @param maxSeats The maximum number of seats available for the occasion.
+  error SeatOutOfRange(uint256 seat, uint256 maxSeats);
+
   modifier onlyOwner() {
     require(msg.sender == owner);
     _;
@@ -70,6 +90,29 @@ contract TokenMaster is ERC721 {
     uint256 _id,
     uint256 _seat
   ) public payable {
+    if (_id == 0)
+      revert MintingWithZeroOccasionId({
+        message: "Can't mint occasion with id:",
+        id: _id
+      });
+
+    if (_id > totalOccasions)
+      revert OccasionDoesNotExist({
+        message: "There is no occassion with id:",
+        id: _id
+      });
+
+    if (seatTaken[_id][_seat] != address(0))
+      revert SeatUnavailable({
+        message: "Unavailable seat:",
+        seat: _seat
+      });
+
+    if (_seat > occasions[_id].maxTickets)
+      revert SeatOutOfRange({
+        seat: _seat,
+        maxSeats: occasions[_id].maxTickets
+      });
 
     occasions[_id].tickets -=1; // Update ticket count
 
