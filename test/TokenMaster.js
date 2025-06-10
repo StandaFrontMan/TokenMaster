@@ -148,4 +148,48 @@ describe("TokenMaster", () => {
       ).to.be.revertedWithCustomError(tokenMaster, "SeatOutOfRange");
     });
   });
+
+  describe("Withdrawing", () => {
+    const OCCASION_ID = 1;
+    const SEAT = 50;
+    const AMOUNT = ethers.utils.parseUnits("1", "ether");
+    let balanceBefore;
+    let contractBalanceBefore;
+
+    beforeEach(async () => {
+      balanceBefore = await ethers.provider.getBalance(deployer.address);
+
+      contractBalanceBefore = await ethers.provider.getBalance(
+        tokenMaster.address
+      );
+
+      let transaction = await tokenMaster
+        .connect(buyer)
+        .mint(OCCASION_ID, SEAT, { value: AMOUNT });
+      await transaction.wait();
+
+      transaction = await tokenMaster.connect(deployer).withdraw();
+      await transaction.wait();
+    });
+
+    it("Owner contract balance updates", async () => {
+      const balanceAfter = await ethers.provider.getBalance(deployer.address);
+      expect(balanceAfter).to.be.greaterThan(balanceBefore);
+    });
+
+    it("Contract balance after should be less than before", async () => {
+      const contractBalanceAfter = await ethers.provider.getBalance(
+        tokenMaster.address
+      );
+      expect(contractBalanceAfter).to.be.equal(contractBalanceBefore);
+    });
+
+    it("Contract balance should be 0 after withdraw by owner", async () => {
+      const contractBalance = await ethers.provider.getBalance(
+        tokenMaster.address
+      );
+
+      expect(contractBalance).to.be.equal(0);
+    });
+  });
 });

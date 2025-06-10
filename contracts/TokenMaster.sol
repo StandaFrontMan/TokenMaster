@@ -134,4 +134,9 @@ contract TokenMaster is ERC721 {
   function getTakenSeats(uint256 _id) public view returns (uint256[] memory) {
     return takenSeats[_id];
   }
+
+  function withdraw()public onlyOwner {
+    (bool success, ) = owner.call{value: address(this).balance}("");
+    require(success);
+  }
 }
