@@ -17,29 +17,47 @@ import { useWallet } from "./hooks/useWallet";
 function App() {
   const { provider, userAddress } = useWallet();
   const [tokenMaster, setTokenMaster] = useState(null);
+  const [occasions, setOccasions] = useState([]);
+
+  const [occasion, setOccasion] = useState(null);
+  const [toggle, setToggle] = useState(false);
 
   useEffect(() => {
     const loadContract = async () => {
       if (!provider) return;
 
-      const network = await provider.getNetwork();
-      const contractAddress = config[network.chainId]?.TokenMaster?.address;
+      try {
+        const network = await provider.getNetwork();
+        const contractAddress = config[network.chainId]?.TokenMaster?.address;
 
-      if (!contractAddress) {
-        console.error(
-          "TokenMaster address not found for network:",
-          network.chainId
+        if (!contractAddress) {
+          console.error(
+            "TokenMaster address not found for network:",
+            network.chainId
+          );
+          return;
+        }
+
+        const contract = new ethers.Contract(
+          contractAddress,
+          TokenMasterABI,
+          provider
         );
-        return;
+
+        setTokenMaster(contract);
+
+        const totalOccasions = await contract.totalOccasions();
+        const loadedOccasions = [];
+
+        for (let i = 1; i <= totalOccasions; i++) {
+          const occasion = await contract.getOccasion(i);
+          loadedOccasions.push({ ...occasion, id: i });
+        }
+
+        setOccasions(loadedOccasions);
+      } catch (err) {
+        console.error("Failed to load contract or occasions:", err);
       }
-
-      const contract = new ethers.Contract(
-        contractAddress,
-        TokenMasterABI,
-        provider
-      );
-
-      setTokenMaster(contract);
     };
 
     loadContract();
@@ -55,32 +73,32 @@ function App() {
         </h2>
       </header>
 
-      {/* <Sort />
+      <Sort />
 
-      <div className='cards'>
+      <div className="cards">
         {occasions.map((occasion, index) => (
           <Card
             occasion={occasion}
-            id={index + 1}
+            id={occasion.id}
             tokenMaster={tokenMaster}
             provider={provider}
-            account={account}
+            account={userAddress}
             toggle={toggle}
             setToggle={setToggle}
             setOccasion={setOccasion}
-            key={index}
+            key={occasion.id}
           />
         ))}
       </div>
 
-      {toggle && (
+      {toggle && occasion && (
         <SeatChart
           occasion={occasion}
           tokenMaster={tokenMaster}
           provider={provider}
           setToggle={setToggle}
         />
-      )} */}
+      )}
     </div>
   );
 }

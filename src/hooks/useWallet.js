@@ -7,25 +7,36 @@ export function useWallet() {
   const [userAddress, setUserAddress] = useState(null);
 
   useEffect(() => {
-    if (!window.ethereum) return;
+    const init = async () => {
+      if (!window.ethereum) return;
 
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    setProvider(provider);
+      const _provider = new ethers.providers.Web3Provider(window.ethereum);
+      setProvider(_provider);
 
-    const handleAccountsChanged = (accounts) => {
+      const accounts = await _provider.send("eth_requestAccounts", []);
       if (accounts.length > 0) {
-        const address = ethers.utils.getAddress(accounts[0]);
-        setUserAddress(address);
-      } else {
-        setUserAddress(null);
+        setUserAddress(ethers.utils.getAddress(accounts[0]));
       }
+
+      const handleAccountsChanged = (accounts) => {
+        if (accounts.length > 0) {
+          setUserAddress(ethers.utils.getAddress(accounts[0]));
+        } else {
+          setUserAddress(null);
+        }
+      };
+
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+
+      return () => {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged
+        );
+      };
     };
 
-    window.ethereum.on("accountsChanged", handleAccountsChanged);
-
-    return () => {
-      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-    };
+    init();
   }, []);
 
   const connect = async () => {
